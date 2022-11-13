@@ -30,7 +30,8 @@ var levelMapping = [
 // attribute for state game
 var stateKeyCode = null;
 var gameover = false;
-var canMove = false;
+var canMove = true;
+var fps;
 
 function start() {
     generateSnake();
@@ -43,10 +44,12 @@ function start() {
 function stop() {
     document.querySelector('.game-over').style.display = null;
     gameover = true;
-    clearInterval(game);
 }
 
 function resetGame() {
+    // reset fps
+    fps = 5;
+
     // reset level
     level = 1;
     document.querySelector('.level').innerHTML = level;
@@ -89,7 +92,7 @@ function keyPress(event) {
         // set max key repeat rate
         setTimeout(() => {
             canMove = true;
-        }, 1000 / (5 * 1.8));
+        }, 1000 / (fps * 1.8));
 
         if(!canMove) {
             return;
@@ -204,19 +207,26 @@ Component.Stage = function (element) {
 
     // Leveling
     levelMapping.forEach(elm => {
-        if (score >= elm.min && score <= elm.max) {
+        if (score >= elm.min && score <= elm.max && level != elm.level) {
             level = elm.level;
+            fps += 5;
         }
     });
     document.querySelector('.level').innerHTML = level;
+
+    if(!gameover){
+        setTimeout(game, 1000 / fps);
+    }
 };
 
 Game.Snake = function (element) {
-    document.onkeydown = keyPress;
-
-    game = setInterval(function () {
+    
+    game = function () {
+        document.onkeydown = keyPress;
         new Component.Stage(element);
-    }, 1000 / 5);
+    };
+
+    setTimeout(game, 1000 / fps);
 };
 
 window.onload = function () {
