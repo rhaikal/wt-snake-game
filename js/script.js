@@ -1,35 +1,99 @@
 var Game = Game || {};
 var Component = Component || {};
 
+// attribute for game
+var game;
 var objectSize = 20;
-var coorX = coorY = 0;
-var snakeX = snakeY = objectSize;
-var foodX = foodY = 15;
-var tail = 5;
-var trail = [];
+
+// attribute for snake
+var coorX
+var coorY;
+var snakeX;
+var snakeY;
+var tail;
+var trail;
+
+// attribute for food
+var foodX;
+var foodY;
+
+// attribute for score
 var score = 0;
+var level = 1;
 var levelMapping = [
     { level: 1, min: 0, max: 30 },
     { level: 2, min: 31, max: 60 },
     { level: 3, min: 61, max: 90 },
     { level: 4, min: 91, max: 120 },
 ];
-var level = 1;
+
+// attribute for state game
 var stateKeyCode = null;
+var gameover = false;
+
+function start() {
+    generateSnake();
+    generateFood();
+    resetGame();
+
+    new Game.Snake('stage');
+}
+
+function resetGame() {
+    // reset level
+    level = 1;
+    document.querySelector('.level').innerHTML = level;
+
+    // reset score
+    score = 0;
+    document.querySelector('.score').innerHTML = score;
+
+    // reset game over
+    gameover = false;
+    document.querySelector('.game-over').style.display = 'none';
+}
+
+function generateSnake() {
+    // generate coordinate snake
+    coorX = 0;
+    coorY = 0;
+    snakeX = 0; 
+    snakeY = 0;
+
+    // generate trail and tail snake
+    trail = [];
+    tail = 5;
+}
+
+function generateFood() {
+    // generate food at random location
+    foodX = Math.floor(Math.random() * objectSize);
+    foodY = Math.floor(Math.random() * objectSize);
+}
 
 function keyPress(event) {
     if (event.keyCode === 37 && stateKeyCode !== 39) {
-        stateKeyCode = event.keyCode;
-        coorX = -1;
-        coorY = 0;
+        if(coorX == 0 && coorY == 0){
+            // didn't allow to move left at start of game
+            return;
+        } else {
+            stateKeyCode = event.keyCode;
+            coorX = -1;
+            coorY = 0;
+        }
     } else if (event.keyCode === 39 && stateKeyCode !== 37) {
         stateKeyCode = event.keyCode;
         coorX = 1;
         coorY = 0;
     } else if (event.keyCode === 38 && stateKeyCode !== 40) {
-        stateKeyCode = event.keyCode;
-        coorX = 0;
-        coorY = -1;
+        if(coorX == 0 && coorY == 0){
+            // didn't allow to move up at start of game
+            return;
+        } else {
+            stateKeyCode = event.keyCode;
+            coorX = 0;
+            coorY = -1;
+        }
     } else if (event.keyCode === 40 && stateKeyCode !== 38) {
         stateKeyCode = event.keyCode;
         coorX = 0;
@@ -53,11 +117,12 @@ Component.Stage = function (element) {
     snakeX += coorX;
     snakeY += coorY;
 
-    if (snakeX < 0) snakeX = objectSize - 1;
-    if (snakeX > objectSize - 1) snakeX = 0;
-    if (snakeY < 0) snakeY = objectSize - 1;
-    if (snakeY > objectSize - 1) snakeY = 0;
-
+    if (snakeX < 0 || snakeX > objectSize - 1 || snakeY < 0 || snakeY > objectSize - 1){
+        document.querySelector('.game-over').style.display = null;
+        gameover = true;
+        clearInterval(game);
+    } 
+    
     /**
      * Draw canvas to black
      */
@@ -95,8 +160,7 @@ Component.Stage = function (element) {
         document.querySelector('.score').innerHTML = score;
 
         // Initiate new food coordinate
-        foodX = Math.floor(Math.random() * objectSize);
-        foodY = Math.floor(Math.random() * objectSize);
+        generateFood();
     }
     context.fillRect(foodX * objectSize, foodY * objectSize, objectSize - 2, objectSize - 2);
 
@@ -111,11 +175,18 @@ Component.Stage = function (element) {
 
 Game.Snake = function (element) {
     document.onkeydown = keyPress;
-    setInterval(function () {
+
+    game = setInterval(function () {
         new Component.Stage(element);
     }, 1000 / 15);
 };
 
 window.onload = function () {
-    new Game.Snake('stage');
+    start();
 };
+
+window.onclick = function () {
+    if(gameover) {
+        start();
+    }
+}
