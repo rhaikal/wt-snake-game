@@ -30,6 +30,7 @@ var levelMapping = [
 // attribute for state game
 var stateKeyCode = null;
 var gameover = false;
+var canMove = false;
 
 function start() {
     generateSnake();
@@ -77,33 +78,44 @@ function generateFood() {
     foodY = Math.floor(Math.random() * objectSize);
 }
 
+function move(key, x, y) {
+    stateKeyCode = key;
+    coorX = x;
+    coorY = y;
+}
+
 function keyPress(event) {
-    if (event.keyCode === 37 && stateKeyCode !== 39) {
-        if(coorX == 0 && coorY == 0){
-            // didn't allow to move left at start of game
+    if(!event.repeat){
+        // set max key repeat rate
+        setTimeout(() => {
+            canMove = true;
+        }, 1000 / (5 * 1.8));
+
+        if(!canMove) {
             return;
-        } else {
-            stateKeyCode = event.keyCode;
-            coorX = -1;
-            coorY = 0;
         }
-    } else if (event.keyCode === 39 && stateKeyCode !== 37) {
-        stateKeyCode = event.keyCode;
-        coorX = 1;
-        coorY = 0;
-    } else if (event.keyCode === 38 && stateKeyCode !== 40) {
-        if(coorX == 0 && coorY == 0){
-            // didn't allow to move up at start of game
-            return;
-        } else {
-            stateKeyCode = event.keyCode;
-            coorX = 0;
-            coorY = -1;
+
+        canMove = false;
+
+        if (event.key === "ArrowLeft" && stateKeyCode !== "ArrowRight") {
+            if(coorX == 0 && coorY == 0){
+                // didn't allow to move left at start of game
+                return;
+            } else {
+                move(event.key, -1, 0);
+            }
+        } else if (event.key === "ArrowRight" && stateKeyCode !== "ArrowLeft") {
+            move(event.key, 1, 0);
+        } else if (event.key === "ArrowUp" && stateKeyCode !== "ArrowDown") {
+            if(coorX == 0 && coorY == 0){
+                // didn't allow to move up at start of game
+                return;
+            } else {
+                move(event.key, 0, -1);
+            }
+        } else if (event.key === "ArrowDown" && stateKeyCode !== "ArrowUp") {
+            move(event.key, 0, 1);
         }
-    } else if (event.keyCode === 40 && stateKeyCode !== 38) {
-        stateKeyCode = event.keyCode;
-        coorX = 0;
-        coorY = 1;
     }
 }
 
@@ -200,8 +212,8 @@ Component.Stage = function (element) {
 };
 
 Game.Snake = function (element) {
-    document.onkeydown = keyPress
-    
+    document.onkeydown = keyPress;
+
     game = setInterval(function () {
         new Component.Stage(element);
     }, 1000 / 5);
