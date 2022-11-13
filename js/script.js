@@ -39,6 +39,12 @@ function start() {
     new Game.Snake('stage');
 }
 
+function stop() {
+    document.querySelector('.game-over').style.display = null;
+    gameover = true;
+    clearInterval(game);
+}
+
 function resetGame() {
     // reset level
     level = 1;
@@ -117,10 +123,12 @@ Component.Stage = function (element) {
     snakeX += coorX;
     snakeY += coorY;
 
+    /**
+     * Stop the game if it hits the egde
+     */
+
     if (snakeX < 0 || snakeX > objectSize - 1 || snakeY < 0 || snakeY > objectSize - 1){
-        document.querySelector('.game-over').style.display = null;
-        gameover = true;
-        clearInterval(game);
+        stop();
     } 
     
     /**
@@ -133,14 +141,32 @@ Component.Stage = function (element) {
     /**
      * Draw object snake
      */
-
+    
     context.fillStyle = 'lime';
     for (i = 0; i < trail.length; i++) {
         context.fillRect(trail[i].x * objectSize, trail[i].y * objectSize, objectSize - 2, objectSize - 2);
     }
-    trail.push({ x: snakeX, y: snakeY });
+    
+    /**
+     * Stop the game if it hits itself
+     */
 
+    var hitItself = trail.find(path => {
+        if(path.x == snakeX && path.y == snakeY){
+            if(snakeX == 0 && snakeY == 0){
+                return false;
+            } else {
+                return true;
+            }
+        }
+    });
 
+    if(hitItself) {
+        stop();
+    } else {
+        trail.push({ x: snakeX, y: snakeY });
+    }
+    
     if (trail.length > tail) {
         trail.shift();
     }
@@ -174,11 +200,11 @@ Component.Stage = function (element) {
 };
 
 Game.Snake = function (element) {
-    document.onkeydown = keyPress;
-
+    document.onkeydown = keyPress
+    
     game = setInterval(function () {
         new Component.Stage(element);
-    }, 1000 / 15);
+    }, 1000 / 5);
 };
 
 window.onload = function () {
